@@ -16,7 +16,6 @@ return new class extends Migration
             $table->string('nama_produk');
             $table->text('deskripsi')->nullable();
             $table->decimal('harga', 12, 2)->default(0);
-            $table->unsignedBigInteger('stok')->default(0);
 
             // Relasi
             $table->unsignedBigInteger('kategori_id');

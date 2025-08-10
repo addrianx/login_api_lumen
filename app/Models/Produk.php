@@ -8,7 +8,7 @@ class Produk extends Model
 {
     protected $table = 'produk';
     protected $fillable = [
-        'nama_produk', 'deskripsi', 'harga', 'stok', 
+        'nama_produk', 'deskripsi', 'harga', 'harga_modal',
         'kategori_id', 'satuan_id'
     ];
 
@@ -26,4 +26,18 @@ class Produk extends Model
     {
         return $this->hasMany(StokProduk::class, 'produk_id');
     }
+
+    // Stok akhir (total_masuk - total_keluar)
+    public function getStokAkhirAttribute()
+    {
+        $masuk = $this->stokHistori()->where('tipe', 'masuk')->sum('jumlah');
+        $keluar = $this->stokHistori()->where('tipe', 'keluar')->sum('jumlah');
+        return $masuk - $keluar;
+    }
+
+    public function transactionItems()
+    {
+        return $this->hasMany(TransactionItem::class, 'produk_id');
+    }
+
 }

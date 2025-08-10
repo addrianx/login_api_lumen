@@ -79,4 +79,5 @@ class KategoriProdukController extends Controller
 
         return response()->json(['message' => 'Kategori berhasil dihapus. Produk dipindahkan ke Uncategories.']);
     }
+    
 }

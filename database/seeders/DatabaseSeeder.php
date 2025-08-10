@@ -18,7 +18,8 @@ class DatabaseSeeder extends Seeder
             KategoriProdukSeeder::class, // Seeder untuk kategori
             UsersTableSeeder::class,
             ProdukSeeder::class, // Baru kemudian produk
-            StokProdukSeeder::class
+            StokProdukSeeder::class,
+            CustomerSeeder::class,
         ]); 
     }
 }

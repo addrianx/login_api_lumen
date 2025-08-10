@@ -48,12 +48,32 @@ $router->group(['middleware' => 'auth'], function () use ($router) {
     $router->put('/api/satuan-produk/{id}', 'SatuanProdukController@update');
     $router->delete('/api/satuan-produk/{id}', 'SatuanProdukController@destroy');
 
+    
     // 🧮 STOK PRODUK (Histori masuk/keluar)
     $router->get('/api/stok-produk', 'StokProdukController@index');
-    $router->get('/api/stok-produk/{id}', 'StokProdukController@show');
+    $router->get('/api/stok-produk-all', 'StokProdukController@paginate');
     $router->post('/api/stok-produk', 'StokProdukController@store'); // tambah histori stok
+    $router->get('/api/stok-produk/{id}', 'StokProdukController@show');
     $router->put('/api/stok-produk/{id}', 'StokProdukController@update');
     $router->delete('/api/stok-produk/{id}', 'StokProdukController@destroy');
+
+
+    // 🧮 STOK USER (Histori masuk/keluar)
+    $router->get('/api/customers', 'CustomerController@index');
+    $router->post('/api/customer', 'CustomerController@store');
+    $router->delete('/api/customers/bulk-delete', 'CustomerController@bulkDelete');
+    $router->get('/api/customer/{id}', 'CustomerController@show');
+    $router->put('/api/customers/{id}', 'CustomerController@update');
+    $router->delete('/api/customers/{id}', 'CustomerController@destroy');
+
+    // 🧮 Data Transaksi dan Riwayat (Histori masuk/keluar)
+    $router->get('/api/transaksi/all', 'TransactionController@index');
+    $router->post('/api/transaksi', 'TransactionController@store');
+    $router->get('/api/transaksi/{id}', 'TransactionController@show');
+    $router->delete('/api/transaksi/{id}', 'TransactionController@destroy');
+
+    // Tambah riwayat pembelian
+    $router->post('{id}/purchase', 'CustomerController@addPurchase');
 
     // User 
      $router->post('/api/verify-password', 'AuthController@verifyPassword');
