@@ -43,8 +43,8 @@ $router->group(['middleware' => 'auth'], function () use ($router) {
 
     // 📏 SATUAN PRODUK
     $router->get('/api/satuan-produk', 'SatuanProdukController@index');
-    $router->get('/api/satuan-produk/{id}', 'SatuanProdukController@show');
     $router->post('/api/satuan-produk', 'SatuanProdukController@store');
+    $router->get('/api/satuan-produk/{id}', 'SatuanProdukController@show');
     $router->put('/api/satuan-produk/{id}', 'SatuanProdukController@update');
     $router->delete('/api/satuan-produk/{id}', 'SatuanProdukController@destroy');
 

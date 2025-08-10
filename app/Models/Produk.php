@@ -22,16 +22,16 @@ class Produk extends Model
         return $this->belongsTo(SatuanProduk::class, 'satuan_id');
     }
 
-    public function stokHistori()
+    public function stok_produk()
     {
-        return $this->hasMany(StokProduk::class, 'produk_id');
+        return $this->hasMany(StokProduk::class, 'produk_id', 'id');
     }
 
     // Stok akhir (total_masuk - total_keluar)
     public function getStokAkhirAttribute()
     {
-        $masuk = $this->stokHistori()->where('tipe', 'masuk')->sum('jumlah');
-        $keluar = $this->stokHistori()->where('tipe', 'keluar')->sum('jumlah');
+        $masuk = $this->stok_produk()->where('tipe', 'masuk')->sum('jumlah');
+        $keluar = $this->stok_produk()->where('tipe', 'keluar')->sum('jumlah');
         return $masuk - $keluar;
     }
 

@@ -27,8 +27,14 @@ class ProdukController extends Controller
 
     public function all()
     {
+        $produk = Produk::withSum([
+            'stok_produk as stok_akhir' => function ($query) {
+                $query->select(DB::raw("SUM(CASE WHEN tipe='masuk' THEN jumlah WHEN tipe='keluar' THEN -jumlah ELSE 0 END)"));
+            }
+        ], 'jumlah')->get();
+
         return response()->json([
-            'data' => Produk::all()
+            'data' => $produk
         ]);
     }
 
@@ -129,20 +135,21 @@ class ProdukController extends Controller
     }
 
 
-    public function destroy($id)
+    public function destroy(Request $request, $id)
     {
         $user = $request->user();
+
         Produk::destroy($id);
 
-        // Simpan log
+        // Simpan log (pastikan pakai $id, bukan $request->ids kalau hapus satuan)
         ActivityLog::create([
             'user_id' => $user->id,
             'action' => 'deleted_products',
-            'description' => 'Menghapus Produk dengan ID: ' . implode(',', $request->ids),
+            'description' => 'Menghapus Produk dengan ID: ' . $id,
             'ip_address' => $request->ip()
         ]);
 
-        return response()->json(['message' => 'Dihapus']);
+        return response()->json(['message' => 'Produk berhasil dihapus.']);
     }
 
 
