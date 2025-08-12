@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Transaction;
 use App\Models\TransactionItem;
 use App\Models\StokProduk;
+use App\Models\Customer;
 use App\Models\Produk;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -45,6 +46,7 @@ class TransactionController extends Controller
                 'total'             => $request->total,
                 'metode_pembayaran' => $request->metode_pembayaran,
                 'status'            => 'completed', // bisa disesuaikan
+                'user_id'           => auth()->id()
             ]);
 
             // Simpan tiap item transaksi & update stok
@@ -86,6 +88,8 @@ class TransactionController extends Controller
                     'jumlah'     => $item['quantity'],
                     'keterangan' => "Penjualan transaksi ID #{$transaction->id}"
                 ]);
+
+
             }
 
             DB::commit();
@@ -114,7 +118,7 @@ class TransactionController extends Controller
         $search = $request->get('search');
 
         // Mulai query dengan relasi yang diperlukan
-        $query = Transaction::with(['customer', 'items.produk'])
+        $query = Transaction::with(['customer', 'items.produk', 'user'])
             ->orderBy('created_at', 'desc');
 
         // Jika ada parameter pencarian, tambahkan kondisi where
@@ -130,6 +134,23 @@ class TransactionController extends Controller
         return response()->json([
             'status' => 'success',
             'data' => $transactions
+        ]);
+    }
+
+    public function show($id)
+    {
+        $transaction = Transaction::with(['customer', 'items.produk'])->find($id);
+
+        if (!$transaction) {
+            return response()->json([
+                'status' => 'error',
+                'message' => "Transaksi dengan ID $id tidak ditemukan"
+            ], 404);
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'data' => $transaction
         ]);
     }
 
