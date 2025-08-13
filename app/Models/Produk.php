@@ -7,9 +7,15 @@ use Illuminate\Database\Eloquent\Model;
 class Produk extends Model
 {
     protected $table = 'produk';
+
     protected $fillable = [
-        'nama_produk', 'deskripsi', 'harga', 'harga_modal',
-        'kategori_id', 'satuan_id'
+        'nama_produk', 
+        'deskripsi', 
+        'harga', 
+        'harga_modal',
+        'kategori_id', 
+        'satuan_id',
+        'store_id', // tambahkan store_id supaya bisa mass assign
     ];
 
     public function kategori()
@@ -20,6 +26,11 @@ class Produk extends Model
     public function satuan()
     {
         return $this->belongsTo(SatuanProduk::class, 'satuan_id');
+    }
+
+    public function store()
+    {
+        return $this->belongsTo(Store::class, 'store_id');
     }
 
     public function stok_produk()
@@ -39,5 +50,4 @@ class Produk extends Model
     {
         return $this->hasMany(TransactionItem::class, 'produk_id');
     }
-
 }

@@ -7,8 +7,16 @@ use Illuminate\Database\Eloquent\Model;
 class Transaction extends Model
 {
     protected $table = 'transactions';
+
     protected $fillable = [
-        'customer_id', 'subtotal', 'diskon', 'total', 'metode_pembayaran', 'status', 'user_id'
+        'customer_id', 
+        'store_id',       // tambah store_id
+        'subtotal', 
+        'diskon', 
+        'total', 
+        'metode_pembayaran', 
+        'status', 
+        'user_id'
     ];
 
     public function user()
@@ -19,6 +27,11 @@ class Transaction extends Model
     public function customer()
     {
         return $this->belongsTo(Customer::class);
+    }
+
+    public function store()
+    {
+        return $this->belongsTo(Store::class, 'store_id');
     }
 
     public function items()
