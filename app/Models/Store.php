@@ -7,37 +7,27 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Store extends Model
 {
-    // Nama tabel jika tidak menggunakan konvensi plural
     protected $table = 'stores';
 
-    // Mass assignable fields
-    protected $fillable = [
-        'name',
-        'address',
-        'phone',
-        // Tambah kolom lain yang kamu perlukan
-    ];
+    protected $fillable = ['name', 'address', 'phone'];
 
-    public function users()
+    public function stokProduk(): HasMany
     {
-        return $this->belongsToMany(User::class)
-                    ->withPivot('role')
-                    ->withTimestamps();
+        return $this->hasMany(StokProduk::class, 'store_id');
     }
 
-    /**
-     * Relasi satu store punya banyak produk
-     */
-    public function products(): HasMany
+    public function users(): HasMany
     {
-        return $this->hasMany(Product::class, 'store_id');
+        return $this->hasMany(User::class, 'store_id');
     }
 
-    /**
-     * Relasi satu store punya banyak transaksi
-     */
     public function transactions(): HasMany
     {
         return $this->hasMany(Transaction::class, 'store_id');
+    }
+
+    public function consumers(): HasMany
+    {
+        return $this->hasMany(Consumer::class, 'store_id');
     }
 }

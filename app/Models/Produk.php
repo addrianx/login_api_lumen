@@ -15,7 +15,6 @@ class Produk extends Model
         'harga_modal',
         'kategori_id', 
         'satuan_id',
-        'store_id', // tambahkan store_id supaya bisa mass assign
     ];
 
     public function kategori()
@@ -27,15 +26,11 @@ class Produk extends Model
     {
         return $this->belongsTo(SatuanProduk::class, 'satuan_id');
     }
-
-    public function store()
-    {
-        return $this->belongsTo(Store::class, 'store_id');
-    }
-
+    
     public function stok_produk()
     {
-        return $this->hasMany(StokProduk::class, 'produk_id', 'id');
+        return $this->hasMany(StokProduk::class, 'produk_id')
+                    ->where('store_id', auth()->user()->store_id);
     }
 
     // Stok akhir (total_masuk - total_keluar)

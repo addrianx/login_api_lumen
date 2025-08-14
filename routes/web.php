@@ -14,12 +14,19 @@
 */
 
 $router->get('/', function () use ($router) {
-    return $router->app->version();
+    return view('Dashboard.index');
 });
 
 // 🔐 AUTH (contoh)
 $router->post('/api/login', 'AuthController@login');
 $router->post('/api/auth/refresh', 'AuthController@refresh');
+$router->get('/api/year', function () {
+    return response()->json([
+        'year' => date('Y')
+    ]);
+});
+
+
 
 $router->group(['middleware' => 'auth'], function () use ($router) {
     // 📦 PRODUK

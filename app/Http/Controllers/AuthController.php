@@ -11,6 +11,7 @@ use Illuminate\Support\Str;
 
 class AuthController extends Controller
 {
+    
     public function login(Request $request)
     {
         $credentials = $request->only(['email', 'password']);
@@ -21,10 +22,7 @@ class AuthController extends Controller
 
         $user = auth()->user();
 
-        // Generate refresh token
         $refreshToken = Str::random(64);
-
-        // Simpan di DB (hapus yang lama dulu)
         RefreshToken::where('user_id', $user->id)->delete();
 
         RefreshToken::create([
@@ -34,11 +32,17 @@ class AuthController extends Controller
 
         return response()->json([
             'message' => 'Login berhasil',
-            'user' => $user,
+            'user' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'store_id' => $user->store_id // aman, ambil dari database
+            ],
             'token' => $token,
             'refresh_token' => $refreshToken
         ]);
     }
+
 
     public function refresh(Request $request)
     {

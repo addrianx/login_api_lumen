@@ -25,13 +25,33 @@ class ProdukController extends Controller
     }
 
 
+    // untuk halaman input stok
     public function all()
     {
-        $produk = Produk::withSum([
-            'stok_produk as stok_akhir' => function ($query) {
-                $query->select(DB::raw("SUM(CASE WHEN tipe='masuk' THEN jumlah WHEN tipe='keluar' THEN -jumlah ELSE 0 END)"));
+        $user = auth()->user();
+
+        $produk = Produk::with([
+            'kategori',
+            'satuan',
+            'stok_produk' => function ($query) use ($user) {
+                $query->where('store_id', $user->store_id);
             }
-        ], 'jumlah')->get();
+        ])
+        ->withSum(['stok_produk as stok_masuk' => function ($query) use ($user) {
+            $query->where('store_id', $user->store_id)
+                ->where('tipe', 'masuk');
+        }], 'jumlah')
+        ->withSum(['stok_produk as stok_keluar' => function ($query) use ($user) {
+            $query->where('store_id', $user->store_id)
+                ->where('tipe', 'keluar');
+        }], 'jumlah')
+        ->get()
+        ->map(function ($item) {
+            // Hitung stok akhir tanpa raw SQL
+            $item->stok_akhir = ($item->stok_masuk ?? 0) - ($item->stok_keluar ?? 0);
+            unset($item->stok_masuk, $item->stok_keluar); // optional, kalau nggak mau dikirim
+            return $item;
+        });
 
         return response()->json([
             'data' => $produk
@@ -39,9 +59,10 @@ class ProdukController extends Controller
     }
 
 
+
     public function store(Request $request)
     {
-        $user = $request->user();
+        $user = auth()->user();
         $validator = Validator::make($request->all(), [
             'nama_produk'   => 'required|string',
             'deskripsi'     => 'nullable|string',
@@ -79,7 +100,8 @@ class ProdukController extends Controller
                     'produk_id'  => $produk->id,
                     'tipe'       => 'masuk',
                     'jumlah'     => $request->stok,
-                    'keterangan' => 'Stok awal'
+                    'keterangan' => 'Stok awal',
+                     'store_id'   => $user->store_id,
                 ]);
             }
 

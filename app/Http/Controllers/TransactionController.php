@@ -15,6 +15,7 @@ class TransactionController extends Controller
 {
     public function store(Request $request)
     {
+        $user = $request->user();
         // Validasi input transaksi
         $validator = Validator::make($request->all(), [
             'customer_id'       => 'required|exists:customers,id',
@@ -42,6 +43,7 @@ class TransactionController extends Controller
             $transaction = Transaction::create([
                 'customer_id'       => $request->customer_id,
                 'subtotal'          => $request->subtotal,
+                'store_id' => $user->store_id,
                 'diskon'            => $request->diskon ?? 0,
                 'total'             => $request->total,
                 'metode_pembayaran' => $request->metode_pembayaran,
@@ -113,22 +115,21 @@ class TransactionController extends Controller
 
     public function index(Request $request)
     {
-        // Ambil query parameter untuk pagination dan filter (opsional)
+        $user = auth()->user();
+
         $perPage = $request->get('per_page', 10);
         $search = $request->get('search');
 
-        // Mulai query dengan relasi yang diperlukan
-        $query = Transaction::with(['customer', 'items.produk', 'user'])
+        $query = Transaction::with(['customer', 'items.produk', 'user', 'store'])
+            ->where('store_id', $user->store_id) // Filter hanya toko user login
             ->orderBy('created_at', 'desc');
 
-        // Jika ada parameter pencarian, tambahkan kondisi where
         if ($search) {
             $query->whereHas('customer', function ($q) use ($search) {
                 $q->where('nama_customer', 'like', '%' . $search . '%');
             });
         }
 
-        // Terapkan pagination pada query yang sudah difilter
         $transactions = $query->paginate($perPage);
 
         return response()->json([
@@ -139,7 +140,11 @@ class TransactionController extends Controller
 
     public function show($id)
     {
-        $transaction = Transaction::with(['customer', 'items.produk'])->find($id);
+        $user = auth()->user();
+
+        $transaction = Transaction::with(['customer', 'items.produk', 'store'])
+            ->where('store_id', $user->store_id) // Pastikan hanya bisa akses toko sendiri
+            ->find($id);
 
         if (!$transaction) {
             return response()->json([

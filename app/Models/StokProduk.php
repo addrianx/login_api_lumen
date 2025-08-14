@@ -16,13 +16,13 @@ class StokProduk extends Model
         'keterangan'
     ];
 
-    public function produk()
-    {
-        return $this->belongsTo(Produk::class, 'produk_id');
-    }
-
     public function store()
     {
         return $this->belongsTo(Store::class, 'store_id');
+    }
+
+    public function produk()
+    {
+        return $this->belongsTo(Produk::class, 'produk_id');
     }
 }

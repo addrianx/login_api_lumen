@@ -13,21 +13,29 @@ class CustomerController extends Controller
     // List pelanggan
     public function index(Request $request)
     {
-        // Ambil query parameter 'per_page' dan 'search'
+        $user = auth()->user();
+
+        if (!$user) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Unauthorized'
+            ], 401);
+        }
+
         $perPage = $request->get('per_page', 10);
         $search = $request->get('search');
 
-        // Mulai query dengan relasi 'transactions'
-        $query = Customer::with('transactions');
+        $query = Customer::with('transactions')
+            ->where('store_id', $user->store_id);
 
-        // Jika ada parameter pencarian, terapkan filter
         if ($search) {
-            $query->where('name', 'like', '%' . $search . '%')
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'like', '%' . $search . '%')
                 ->orWhere('phone', 'like', '%' . $search . '%')
                 ->orWhere('address', 'like', '%' . $search . '%');
+            });
         }
 
-        // Terapkan pengurutan dan pagination
         $customers = $query->orderBy('name', 'asc')->paginate($perPage);
 
         return response()->json([
@@ -36,9 +44,12 @@ class CustomerController extends Controller
         ]);
     }
 
+
     // Tambah pelanggan
     public function store(Request $request)
     {
+        $user = auth()->user();
+
         // Validasi input
         $validator = Validator::make($request->all(), [
             'name'    => 'required|string|max:255',
@@ -53,8 +64,14 @@ class CustomerController extends Controller
             ], 422);
         }
 
-        // Simpan data dengan hasil validasi
-        $customer = Customer::create($validator->validated());
+        // Ambil data hasil validasi
+        $data = $validator->validated();
+
+        // Tambahkan store_id
+        $data['store_id'] = $user->store_id;
+
+        // Simpan data customer
+        $customer = Customer::create($data);
 
         return response()->json($customer, 201);
     }

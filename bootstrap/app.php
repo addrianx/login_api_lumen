@@ -24,7 +24,6 @@ $app = new Laravel\Lumen\Application(
 );
 
 $app->withFacades();
-
 $app->withEloquent();
 
 /*
@@ -62,7 +61,8 @@ $app->singleton(
 
 $app->configure('app');
 $app->configure('auth');
-
+$app->configure('jwt');
+$app->configure('view');
 /*
 |--------------------------------------------------------------------------
 | Register Middleware
@@ -95,6 +95,8 @@ $app->middleware([
 ]);
 
 $app->register(Illuminate\Validation\ValidationServiceProvider::class);
+
+$app->register(Illuminate\View\ViewServiceProvider::class);
 /*
 |--------------------------------------------------------------------------
 | Register Service Providers

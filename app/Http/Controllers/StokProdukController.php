@@ -11,10 +11,15 @@ use App\Models\StokProduk;
 class StokProdukController extends Controller
 {
 
+
     public function index()
     {
+        $user = auth()->user();
         // Ambil semua histori stok dengan relasi produk, kategori, dan satuan
-        $histori = StokProduk::with(['produk.kategori', 'produk.satuan'])->latest()->get();
+        $histori = StokProduk::with(['produk.kategori', 'produk.satuan', 'store'])
+            ->where('store_id', $user->store_id) // aman, filter dari login
+            ->latest()
+            ->get();
 
         $produkStok = [];
 
@@ -29,12 +34,19 @@ class StokProdukController extends Controller
                     'harga' => $produk->harga,
                     'kategori' => $produk->kategori->nama_kategori ?? null,
                     'satuan' => $produk->satuan->nama_satuan ?? null,
+                    'store' => $item->store ? [
+                        'id' => $item->store->id,
+                        'nama' => $item->store->nama,
+                        'alamat' => $item->store->alamat,
+                        'no_kontak' => $item->store->no_kontak,
+                    ] : null,
                     'total_masuk' => 0,
                     'total_keluar' => 0,
                     'stok_akhir' => 0, // nanti dihitung manual
                     'terakhir_update' => $item->created_at?->format('Y-m-d H:i:s') ?? null
                 ];
             }
+
 
             if ($item->tipe === 'masuk') {
                 $produkStok[$produkId]['total_masuk'] += $item->jumlah;
@@ -65,12 +77,18 @@ class StokProdukController extends Controller
 
     public function paginate(Request $request)
     {
+        $user = auth()->user();
         $perPage = $request->input('per_page', 10); // default 10 per halaman
 
-        // Ambil histori stok terurut dari yang terbaru
-        $historiQuery = StokProduk::with(['produk.kategori', 'produk.satuan'])->latest();
+        // Ambil histori stok terurut dari yang terbaru, termasuk store
+        $historiQuery = StokProduk::with([
+            'produk.kategori', 
+            'produk.satuan',
+            'store'
+        ])
+        ->where('store_id', $user->store_id) // hanya stok dari toko user
+        ->latest();
 
-        // Pagination seluruh histori
         $historiPaginated = $historiQuery->paginate($perPage);
 
         // Kelompokkan histori berdasarkan produk_id
@@ -80,12 +98,19 @@ class StokProdukController extends Controller
 
         foreach ($grouped as $produkId => $items) {
             $produk = $items->first()->produk;
+            $store  = $items->first()->store;
 
             $produkStok = [
                 'produk_id' => $produkId,
                 'nama_produk' => $produk->nama_produk,
                 'kategori' => $produk->kategori->nama_kategori ?? null,
                 'satuan' => $produk->satuan->nama_satuan ?? null,
+                'store' => [
+                    'id' => $store->id ?? null,
+                    'nama' => $store->name ?? null,
+                    'alamat' => $store->address ?? null,
+                    'no_kontak' => $store->phone ?? null,
+                ],
                 'total_masuk' => 0,
                 'total_keluar' => 0,
                 'stok_akhir' => $produk->stok,
@@ -135,7 +160,19 @@ class StokProdukController extends Controller
 
     public function show($id)
     {
-        $stok = StokProduk::with('produk')->findOrFail($id);
+        $user = auth()->user();
+
+        $stok = StokProduk::with(['produk', 'store'])
+            ->where('store_id', $user->store_id) // Hanya stok dari toko user
+            ->find($id);
+
+        if (!$stok) {
+            return response()->json([
+                'status' => 'error',
+                'message' => "Stok dengan ID $id tidak ditemukan atau tidak punya akses"
+            ], 404);
+        }
+
         return response()->json([
             'status' => 'success',
             'data' => $stok
@@ -145,6 +182,8 @@ class StokProdukController extends Controller
 
     public function store(Request $request)
     {
+        $user = auth()->user();
+
         $validator = Validator::make($request->all(), [
             'produk_id' => 'required|exists:produk,id',
             'tipe' => 'required|in:masuk,keluar',
@@ -186,6 +225,7 @@ class StokProdukController extends Controller
             // Simpan histori stok
             $stok = StokProduk::create([
                 'produk_id' => $request->produk_id,
+                'store_id' => $user->store_id,
                 'tipe' => $request->tipe,
                 'jumlah' => $request->jumlah,
                 'keterangan' => $request->keterangan
@@ -239,5 +279,7 @@ class StokProdukController extends Controller
             'message' => 'Histori stok berhasil dihapus'
         ]);
     }
+
+
 
 }
